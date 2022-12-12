@@ -20,6 +20,8 @@ theme:
     - instant
     - navigation.tabs
     - navigation.expand
+    - navigation.instant
+    - navigation.tracking
     - content.code.annotate
     - content.tabs.link
 nav:
@@ -27,6 +29,7 @@ nav:
   - Documentation:
     - Getting Started: getting-started.md
     - Overview:
+      - Files And Variables: files-and-variables.md
       - Automatic Shell Activation: automatic-shell-activation.md
       - Garbage Collection: garbage-collection.md
     - Writing devenv.yaml:
@@ -39,6 +42,10 @@ nav:
       - Languages: languages.md
       - Processes: processes.md
       - Pre-Commit Hooks: pre-commit-hooks.md
+    - Guides: 
+      - Using With Flakes: guides/using-with-flakes.md
+    - Integrations:
+      - Codespaces / devcontainer: integrations/codespaces-devcontainer.md
     - Examples: examples.md
     - Roadmap: roadmap.md
     - Reference:
@@ -52,6 +59,15 @@ nav:
 plugins:
   search: {}
   markdownextradata: {}
+  social:
+    cards_color:
+      fill: "#FBFBFB"
+      text: "#425C82"
+  rss:
+    match_path: blog/posts/.* 
+    date_from_meta:
+      as_creation: date
+      as_update: date
 
 extra:
   social:
@@ -62,7 +78,7 @@ extra:
     - icon: fontawesome/brands/discord 
       link: https://discord.gg/naMgvexb6q
   devenv:
-    version: 0.3
+    version: 0.4
 markdown_extensions:
   - tables
   - admonition

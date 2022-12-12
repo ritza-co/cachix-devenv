@@ -7,12 +7,21 @@
   };
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+  inputs.pre-commit-hooks = {
+    url = "github:cachix/pre-commit-hooks.nix";
+    inputs = {
+      nixpkgs.follows = "nixpkgs";
+      flake-compat.follows = "flake-compat";
+    };
+  };
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
   };
-  inputs.nix.url = "github:domenkozar/nix/relaxed-flakes";
+  inputs.nix = {
+    url = "github:domenkozar/nix/relaxed-flakes";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 
   outputs = { self, nixpkgs, pre-commit-hooks, nix, ... }:
     let
@@ -34,7 +43,7 @@
     {
       packages = forAllSystems (system:
         let
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = nixpkgs.legacyPackages.${system};
         in
         {
           devenv = mkPackage pkgs;
@@ -45,5 +54,28 @@
       modules = ./src/modules;
 
       defaultPackage = forAllSystems (system: self.packages.${system}.devenv);
+
+      templates.simple = {
+        path = ./templates/simple;
+        description = "A direnv supported Nix flake with devenv integration.";
+      };
+
+      lib = {
+        mkConfig = { pkgs, inputs, modules }:
+          let
+            moduleInputs = { inherit pre-commit-hooks; } // inputs;
+            project = inputs.nixpkgs.lib.evalModules {
+              specialArgs = moduleInputs // {
+                inherit pkgs;
+                inputs = moduleInputs;
+              };
+              modules = [
+                (self.modules + /top-level.nix)
+              ] ++ modules;
+            };
+          in
+          project.config;
+        mkShell = args: (self.lib.mkConfig args).shell;
+      };
     };
 }

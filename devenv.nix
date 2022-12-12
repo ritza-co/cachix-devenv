@@ -1,12 +1,14 @@
-{ pkgs, nix, lib, config, ... }:
+{ inputs, pkgs, lib, config, ... }:
 
 {
   packages = [
-    (import ./src/devenv.nix { inherit pkgs nix; })
+    (import ./src/devenv.nix { inherit pkgs; nix = inputs.nix; })
     pkgs.python3Packages.virtualenv
     pkgs.python3Packages.cairocffi
     pkgs.yaml2json
   ];
+
+  devcontainer.enable = true;
 
   # bin/mkdocs serve --config-file mkdocs.insiders.yml
   processes.docs.exec = "bin/mkdocs serve";
@@ -35,6 +37,16 @@
       devenv init
     popd
 
+    # Test devenv integrated into Nix flake
+    tmp="$(mktemp -d)"
+    pushd "$tmp"
+      nix flake init --template ''${DEVENV_ROOT}#simple
+      nix flake update \
+        --override-input devenv ''${DEVENV_ROOT}
+      nix develop --command echo nix-develop started succesfully
+    popd
+    rm -rf "$tmp"
+
     # TODO: test direnv integration
     # TODO: test DIRENV_ACTIVE
   '';
@@ -49,19 +61,20 @@
     devenv shell ls
     popd
   '';
-  scripts."generate-doc-options".exec = ''
-    options=$(nix build --extra-experimental-features 'flakes nix-command' --print-out-paths --no-link '.#devenv-docs-options')
+  scripts."devenv-generate-doc-options".exec = ''
+    set -e
+    options=$(nix build --extra-experimental-features 'flakes nix-command' --show-trace --print-out-paths --no-link '.#devenv-docs-options')
     echo "# devenv.nix options" > docs/reference/options.md
     echo >> docs/reference/options.md
     cat $options >> docs/reference/options.md
   '';
-  scripts."generate-languages-example".exec = ''
+  scripts."devenv-generate-languages-example".exec = ''
     cat > examples/supported-languages/devenv.nix <<EOF
     { pkgs, ... }: {
 
       # Enable all languages tooling!
       ${lib.concatStringsSep "\n  " (map (lang: "languages.${lang}.enable = true;") (builtins.attrNames config.languages))}
-    
+
       # If you're missing a language, please contribute it by following examples of other languages <3
     }
     EOF
