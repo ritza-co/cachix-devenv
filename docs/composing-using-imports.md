@@ -9,7 +9,7 @@ stored in a remote ``https://github.com/mycompany/redis.devenv`` repository.
 inputs:
   nixpkgs:
     url: github:NixOS/nixpkgs/nixpkgs-unstable
-  devenv:
+  devenv:kjk
     url: github:cachix/devenv
 imports:
 - ./frontend
